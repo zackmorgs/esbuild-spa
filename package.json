@@ -1,13 +1,14 @@
 {
-  "name": "esbuild-practice",
+  "name": "esbuild-spa",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
     "start": "npm-run-all -s start::esbuild start::dev",
-    "start::esbuild": ".\\node_modules\\.bin\\esbuild .\\src\\app.jsx --bundle --outfile=.\\build\\js\\script.js --outdir=.\\build",
-    "start::esbuild:watch": ".\\node_modules\\.bin\\esbuild .\\src\\app.jsx --bundle --outfile=.\\build\\js\\script.js --outdir=.\\build --watch",
-    "start::dev": "npm-run-all -p "
+    "start::esbuild": ".\\node_modules\\.bin\\esbuild .\\src\\app.jsx --bundle --outfile=.\\build\\js\\script.js",
+    "start::esbuild:watch": ".\\node_modules\\.bin\\esbuild .\\src\\app.jsx --bundle --outfile=.\\build\\js\\script.js --watch",
+    "start::server" : "node .",
+    "start::dev": "npm-run-all -p start::esbuild:watch start::server"
   },
   "keywords": [],
   "author": "",
