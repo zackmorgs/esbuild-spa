@@ -7,10 +7,26 @@ const path = require('path');
 const hostname = '127.0.0.1';
 const port = 3000;
 
-let spa = fs.readFileSync(path.resolve("./build/index.html"), 'utf8', (err) => {
-    if (err) { throw err; }
-});
+let build_files = {};
 
+let build_path = path.resolve('./build');
+
+fs.readFileSync(build_path, (err, files)=> {
+    if (err) { 
+        console.error(err);
+        throw err; 
+    } else {
+        for (let i=0; i < files.length; i++) {
+            build_files[files[i]] = fs.readFileSync(path.resolve(`./build/${files[i]}`), 'utf8', (err) => {
+                if (err) { throw err; }
+            });
+        }
+    }
+})
+
+let spa = {
+
+}
 let script = fs.readFileSync(path.resolve("./build/js/script.js"), 'utf8', (err) => {
     if (err) { throw err; }
 });
@@ -19,7 +35,7 @@ let script = fs.readFileSync(path.resolve("./build/js/script.js"), 'utf8', (err)
 // create a hashtable like object that gets the files from the directory.
 // create hashtable via adding as children to array (foreach file in dir)
 
-console.log(spa);
+// console.log(spa);
 
 const server = http.createServer((req, res) => {
     res.statusCode = 200;
@@ -33,7 +49,7 @@ const server = http.createServer((req, res) => {
 
     // todo: currently returns the spa html, but non of your .css/.js is being loaded because request keeps giving back html instead. 
 
-    res.end(spa);
+    res.end(build_files[req.url]);
 
 });
 
