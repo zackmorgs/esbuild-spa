@@ -1,58 +1,43 @@
-const http = require('http');
-// const http2 = require('http2');
-// todo
-const fs = require('fs');
-const path = require('path');
+const { build } = require("esbuild")
+const chokidar = require("chokidar")
+const liveServer = require("live-server")
 
-const hostname = '127.0.0.1';
-const port = 3000;
+// thanks to this chap for his code: https://github.com/zaydek/esbuild-hot-reload
 
-let build_files = {};
-
-let build_path = path.resolve('./build');
-
-fs.readFileSync(build_path, (err, files)=> {
-    if (err) { 
-        console.error(err);
-        throw err; 
-    } else {
-        for (let i=0; i < files.length; i++) {
-            build_files[files[i]] = fs.readFileSync(path.resolve(`./build/${files[i]}`), 'utf8', (err) => {
-                if (err) { throw err; }
-            });
-        }
-    }
-})
-
-let spa = {
-
-}
-let script = fs.readFileSync(path.resolve("./build/js/script.js"), 'utf8', (err) => {
-    if (err) { throw err; }
-});
-
-// todo:
-// create a hashtable like object that gets the files from the directory.
-// create hashtable via adding as children to array (foreach file in dir)
-
-// console.log(spa);
-
-const server = http.createServer((req, res) => {
-    res.statusCode = 200;
-    res.setHeader('Content-Type', 'text/html');
-    //   res.end(req.url);
-    let requestUrl = req.url;
-
-    // if (requestUrl.indexOf('.js') || requestUrl.i) {
-    //     res.end()
-    // }
-
-    // todo: currently returns the spa html, but non of your .css/.js is being loaded because request keeps giving back html instead. 
-
-    res.end(build_files[req.url]);
-
-});
-
-// server.listen(port, hostname, () => {
-//     console.log(`Server running at http://${hostname}:${port}/`);
-// });
+;(async () => {
+	// `esbuild` bundler for JavaScript / TypeScript.
+	const builder = await build({
+		// Bundles JavaScript.
+		bundle: true,
+		// Defines env variables for bundled JavaScript; here `process.env.NODE_ENV`
+		// is propagated with a fallback.
+		define: { "process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV || "development") },
+		// Bundles JavaScript from (see `outfile`).
+		entryPoints: ["./src/App.jsx"],
+		// Uses incremental compilation (see `chokidar.on`).
+		incremental: true,
+		// Removes whitespace, etc. depending on `NODE_ENV=...`.
+		minify: process.env.NODE_ENV === "production",
+		// Bundles JavaScript to (see `entryPoints`).
+		outfile: "./build/js/script.js",
+	})
+	// `chokidar` watcher source changes.
+	chokidar
+		// Watches TypeScript and React TypeScript.
+		.watch("src/**/*.{ts,tsx}", {
+			interval: 0, // No delay
+		})
+		// Rebuilds esbuild (incrementally -- see `build.incremental`).
+		.on("all", () => {
+			builder.rebuild()
+		})
+	// `liveServer` local server for hot reload.
+	liveServer.start({
+		// Opens the local server on start.
+		open: true,
+		// Uses `PORT=...` or 8080 as a fallback.
+		port: +process.env.PORT || 8080,
+		// Uses `public` as the local server folder.
+		root: "build",
+	})
+})()
